@@ -320,308 +320,6 @@ func TestAccAWSDocDBCluster_Port(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBCluster_SnapshotIdentifier(t *testing.T) {
-	var dbCluster, sourceDocDBCluster docdb.DBCluster
-	var dbClusterSnapshot docdb.DBClusterSnapshot
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_docdb_cluster.source"
-	snapshotResourceName := "aws_db_cluster_snapshot.test"
-	resourceName := "aws_docdb_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDocDBClusterConfig_SnapshotIdentifier(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBClusterExists(sourceDbResourceName, &sourceDocDBCluster),
-					testAccCheckDocDBClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
-				),
-			},
-		},
-	})
-}
-
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6157
-func TestAccAWSDocDBCluster_SnapshotIdentifier_EngineVersion_Different(t *testing.T) {
-	var dbCluster, sourceDocDBCluster docdb.DBCluster
-	var dbClusterSnapshot docdb.DBClusterSnapshot
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_docdb_cluster.source"
-	snapshotResourceName := "aws_db_cluster_snapshot.test"
-	resourceName := "aws_docdb_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDocDBClusterConfig_SnapshotIdentifier_EngineVersion(rName, "docdb", "3.6.0", "3.6.1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBClusterExists(sourceDbResourceName, &sourceDocDBCluster),
-					testAccCheckDocDBClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.6.1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
-		},
-	})
-}
-
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6157
-func TestAccAWSDocDBCluster_SnapshotIdentifier_EngineVersion_Equal(t *testing.T) {
-	var dbCluster, sourceDocDBCluster docdb.DBCluster
-	var dbClusterSnapshot docdb.DBClusterSnapshot
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_docdb_cluster.source"
-	snapshotResourceName := "aws_db_cluster_snapshot.test"
-	resourceName := "aws_docdb_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDocDBClusterConfig_SnapshotIdentifier_EngineVersion(rName, "docdb", "3.6.0", "3.6.0"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBClusterExists(sourceDbResourceName, &sourceDocDBCluster),
-					testAccCheckDocDBClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.6.0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
-		},
-	})
-}
-
-func TestAccAWSDocDBCluster_SnapshotIdentifier_PreferredBackupWindow(t *testing.T) {
-	var dbCluster, sourceDocDBCluster docdb.DBCluster
-	var dbClusterSnapshot docdb.DBClusterSnapshot
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_docdb_cluster.source"
-	snapshotResourceName := "aws_db_cluster_snapshot.test"
-	resourceName := "aws_docdb_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDocDBClusterConfig_SnapshotIdentifier_PreferredBackupWindow(rName, "00:00-08:00"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBClusterExists(sourceDbResourceName, &sourceDocDBCluster),
-					testAccCheckDocDBClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "00:00-08:00"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
-		},
-	})
-}
-
-func TestAccAWSDocDBCluster_SnapshotIdentifier_PreferredMaintenanceWindow(t *testing.T) {
-	var dbCluster, sourceDocDBCluster docdb.DBCluster
-	var dbClusterSnapshot docdb.DBClusterSnapshot
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_docdb_cluster.source"
-	snapshotResourceName := "aws_db_cluster_snapshot.test"
-	resourceName := "aws_docdb_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDocDBClusterConfig_SnapshotIdentifier_PreferredMaintenanceWindow(rName, "sun:01:00-sun:01:30"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBClusterExists(sourceDbResourceName, &sourceDocDBCluster),
-					testAccCheckDocDBClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "sun:01:00-sun:01:30"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
-		},
-	})
-}
-
-func TestAccAWSDocDBCluster_SnapshotIdentifier_Tags(t *testing.T) {
-	var dbCluster, sourceDocDBCluster docdb.DBCluster
-	var dbClusterSnapshot docdb.DBClusterSnapshot
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_docdb_cluster.source"
-	snapshotResourceName := "aws_db_cluster_snapshot.test"
-	resourceName := "aws_docdb_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDocDBClusterConfig_SnapshotIdentifier_Tags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBClusterExists(sourceDbResourceName, &sourceDocDBCluster),
-					testAccCheckDocDBClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSDocDBCluster_SnapshotIdentifier_VpcSecurityGroupIds(t *testing.T) {
-	var dbCluster, sourceDocDBCluster docdb.DBCluster
-	var dbClusterSnapshot docdb.DBClusterSnapshot
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_docdb_cluster.source"
-	snapshotResourceName := "aws_db_cluster_snapshot.test"
-	resourceName := "aws_docdb_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDocDBClusterConfig_SnapshotIdentifier_VpcSecurityGroupIds(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBClusterExists(sourceDbResourceName, &sourceDocDBCluster),
-					testAccCheckDocDBClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
-				),
-			},
-		},
-	})
-}
-
-// Regression reference: https://github.com/terraform-providers/terraform-provider-aws/issues/5450
-// This acceptance test explicitly tests when snapshot_identifer is set,
-// vpc_security_group_ids is set (which triggered the resource update function),
-// and tags is set which was missing its ARN used for tagging
-func TestAccAWSDocDBCluster_SnapshotIdentifier_VpcSecurityGroupIds_Tags(t *testing.T) {
-	var dbCluster, sourceDocDBCluster docdb.DBCluster
-	var dbClusterSnapshot docdb.DBClusterSnapshot
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_docdb_cluster.source"
-	snapshotResourceName := "aws_db_cluster_snapshot.test"
-	resourceName := "aws_docdb_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDocDBClusterConfig_SnapshotIdentifier_VpcSecurityGroupIds_Tags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBClusterExists(sourceDbResourceName, &sourceDocDBCluster),
-					testAccCheckDocDBClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSDocDBCluster_SnapshotIdentifier_EncryptedRestore(t *testing.T) {
-	var dbCluster, sourceDocDBCluster docdb.DBCluster
-	var dbClusterSnapshot docdb.DBClusterSnapshot
-
-	keyRegex := regexp.MustCompile("^arn:aws:kms:")
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_docdb_cluster.source"
-	snapshotResourceName := "aws_db_cluster_snapshot.test"
-	resourceName := "aws_docdb_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDocDBClusterConfig_SnapshotIdentifier_EncryptedRestore(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBClusterExists(sourceDbResourceName, &sourceDocDBCluster),
-					testAccCheckDocDBClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
-					resource.TestMatchResourceAttr(
-						"aws_docdb_cluster.test", "kms_key_id", keyRegex),
-					resource.TestCheckResourceAttr(
-						"aws_docdb_cluster.test", "storage_encrypted", "true"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckDocDBClusterDestroy(s *terraform.State) error {
 	return testAccCheckDocDBClusterDestroyWithProvider(s, testAccProvider)
 }
@@ -659,6 +357,52 @@ func testAccCheckDocDBClusterDestroyWithProvider(s *terraform.State, provider *s
 	}
 
 	return nil
+}
+
+func testAccCheckDocDBClusterExists(n string, v *docdb.DBCluster) resource.TestCheckFunc {
+	return testAccCheckDocDBClusterExistsWithProvider(n, v, func() *schema.Provider { return testAccProvider })
+}
+
+func testAccCheckDocDBClusterExistsWithProvider(n string, v *docdb.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No DB Instance ID is set")
+		}
+
+		provider := providerF()
+		conn := provider.Meta().(*AWSClient).docdbconn
+		resp, err := conn.DescribeDBClusters(&docdb.DescribeDBClustersInput{
+			DBClusterIdentifier: aws.String(rs.Primary.ID),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		for _, c := range resp.DBClusters {
+			if *c.DBClusterIdentifier == rs.Primary.ID {
+				*v = *c
+				return nil
+			}
+		}
+
+		return fmt.Errorf("DB Cluster (%s) not found", rs.Primary.ID)
+	}
+}
+
+func testAccCheckDocDBClusterRecreated(i, j *docdb.DBCluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.TimeValue(i.ClusterCreateTime) == aws.TimeValue(j.ClusterCreateTime) {
+			return errors.New("DocDB Cluster was not recreated")
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckDocDBClusterSnapshot(rInt int) resource.TestCheckFunc {
@@ -711,52 +455,6 @@ func testAccCheckDocDBClusterSnapshot(rInt int) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDocDBClusterExists(n string, v *docdb.DBCluster) resource.TestCheckFunc {
-	return testAccCheckDocDBClusterExistsWithProvider(n, v, func() *schema.Provider { return testAccProvider })
-}
-
-func testAccCheckDocDBClusterExistsWithProvider(n string, v *docdb.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DB Instance ID is set")
-		}
-
-		provider := providerF()
-		conn := provider.Meta().(*AWSClient).docdbconn
-		resp, err := conn.DescribeDBClusters(&docdb.DescribeDBClustersInput{
-			DBClusterIdentifier: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			return err
-		}
-
-		for _, c := range resp.DBClusters {
-			if *c.DBClusterIdentifier == rs.Primary.ID {
-				*v = *c
-				return nil
-			}
-		}
-
-		return fmt.Errorf("DB Cluster (%s) not found", rs.Primary.ID)
-	}
-}
-
-func testAccCheckDocDBClusterRecreated(i, j *docdb.DBCluster) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.TimeValue(i.ClusterCreateTime) == aws.TimeValue(j.ClusterCreateTime) {
-			return errors.New("DocDB Cluster was not recreated")
-		}
-
-		return nil
-	}
-}
-
 func testAccDocDBClusterConfig(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
@@ -779,7 +477,17 @@ func testAccDocDBClusterConfig_namePrefix(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "test" {
   cluster_identifier_prefix = "tf-test-"
-  master_username = "root"
+  master_username = "root-%d"
+  master_password = "password"
+  skip_final_snapshot = true
+}
+`, n)
+}
+
+func testAccDocDBClusterConfig_generatedName(n int) string {
+	return fmt.Sprintf(`
+resource "aws_docdb_cluster" "test" {
+  master_username = "root-%d"
   master_password = "password"
   skip_final_snapshot = true
 }
@@ -933,219 +641,4 @@ resource "aws_docdb_cluster" "test" {
   port                            = %d
   skip_final_snapshot             = true
 }`, rInt, port)
-}
-
-func testAccAWSDocDBClusterConfig_SnapshotIdentifier(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_docdb_cluster" "source" {
-  cluster_identifier   = "%s-source"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
-}
-
-resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_docdb_cluster.source.id}"
-  db_cluster_snapshot_identifier = %q
-}
-
-resource "aws_docdb_cluster" "test" {
-  cluster_identifier  = %q
-  skip_final_snapshot = true
-  snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
-}
-`, rName, rName, rName)
-}
-
-func testAccAWSDocDBClusterConfig_SnapshotIdentifier_EngineVersion(rName, engine, engineVersionSource, engineVersion string) string {
-	return fmt.Sprintf(`
-resource "aws_docdb_cluster" "source" {
-  cluster_identifier  = "%s-source"
-  engine              = %q
-  engine_version      = %q
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
-  skip_final_snapshot = true
-}
-
-resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_docdb_cluster.source.id}"
-  db_cluster_snapshot_identifier = %q
-}
-
-resource "aws_docdb_cluster" "test" {
-  cluster_identifier  = %q
-  engine              = %q
-  engine_version      = %q
-  skip_final_snapshot = true
-  snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
-}
-`, rName, engine, engineVersionSource, rName, rName, engine, engineVersion)
-}
-
-func testAccAWSDocDBClusterConfig_SnapshotIdentifier_PreferredBackupWindow(rName, preferredBackupWindow string) string {
-	return fmt.Sprintf(`
-resource "aws_docdb_cluster" "source" {
-  cluster_identifier  = "%s-source"
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
-  skip_final_snapshot = true
-}
-
-resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_docdb_cluster.source.id}"
-  db_cluster_snapshot_identifier = %q
-}
-
-resource "aws_docdb_cluster" "test" {
-  cluster_identifier      = %q
-  preferred_backup_window = %q
-  skip_final_snapshot     = true
-  snapshot_identifier     = "${aws_db_cluster_snapshot.test.id}"
-}
-`, rName, rName, rName, preferredBackupWindow)
-}
-
-func testAccAWSDocDBClusterConfig_SnapshotIdentifier_PreferredMaintenanceWindow(rName, preferredMaintenanceWindow string) string {
-	return fmt.Sprintf(`
-resource "aws_docdb_cluster" "source" {
-  cluster_identifier  = "%s-source"
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
-  skip_final_snapshot = true
-}
-
-resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_docdb_cluster.source.id}"
-  db_cluster_snapshot_identifier = %q
-}
-
-resource "aws_docdb_cluster" "test" {
-  cluster_identifier           = %q
-  preferred_maintenance_window = %q
-  skip_final_snapshot          = true
-  snapshot_identifier          = "${aws_db_cluster_snapshot.test.id}"
-}
-`, rName, rName, rName, preferredMaintenanceWindow)
-}
-
-func testAccAWSDocDBClusterConfig_SnapshotIdentifier_Tags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_docdb_cluster" "source" {
-  cluster_identifier   = "%s-source"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
-}
-
-resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_docdb_cluster.source.id}"
-  db_cluster_snapshot_identifier = %q
-}
-
-resource "aws_docdb_cluster" "test" {
-  cluster_identifier  = %q
-  skip_final_snapshot = true
-  snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
-
-  tags = {
-    key1 = "value1"
-  }
-}
-`, rName, rName, rName)
-}
-
-func testAccAWSDocDBClusterConfig_SnapshotIdentifier_VpcSecurityGroupIds(rName string) string {
-	return fmt.Sprintf(`
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_security_group" "default" {
-  name   = "default"
-  vpc_id = "${data.aws_vpc.default.id}"
-}
-
-resource "aws_docdb_cluster" "source" {
-  cluster_identifier   = "%s-source"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
-}
-
-resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_docdb_cluster.source.id}"
-  db_cluster_snapshot_identifier = %q
-}
-
-resource "aws_docdb_cluster" "test" {
-  cluster_identifier     = %q
-  skip_final_snapshot    = true
-  snapshot_identifier    = "${aws_db_cluster_snapshot.test.id}"
-  vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
-}
-`, rName, rName, rName)
-}
-
-func testAccAWSDocDBClusterConfig_SnapshotIdentifier_VpcSecurityGroupIds_Tags(rName string) string {
-	return fmt.Sprintf(`
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_security_group" "default" {
-  name   = "default"
-  vpc_id = "${data.aws_vpc.default.id}"
-}
-
-resource "aws_docdb_cluster" "source" {
-  cluster_identifier   = "%s-source"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
-}
-
-resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_docdb_cluster.source.id}"
-  db_cluster_snapshot_identifier = %q
-}
-
-resource "aws_docdb_cluster" "test" {
-  cluster_identifier     = %q
-  skip_final_snapshot    = true
-  snapshot_identifier    = "${aws_db_cluster_snapshot.test.id}"
-  vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
-
-  tags = {
-    key1 = "value1"
-  }
-}
-`, rName, rName, rName)
-}
-
-func testAccAWSDocDBClusterConfig_SnapshotIdentifier_EncryptedRestore(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {}
-
-resource "aws_docdb_cluster" "source" {
-  cluster_identifier   = "%s-source"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
-}
-
-resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_docdb_cluster.source.id}"
-  db_cluster_snapshot_identifier = %q
-}
-
-resource "aws_docdb_cluster" "test" {
-  cluster_identifier  = %q
-  skip_final_snapshot = true
-  snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
-
-  storage_encrypted = true
-  kms_key_id = "${aws_kms_key.test.arn}"
-}
-`, rName, rName, rName)
 }
