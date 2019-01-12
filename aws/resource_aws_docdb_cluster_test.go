@@ -55,7 +55,7 @@ func TestAccAWSDocDBCluster_basic(t *testing.T) {
 				Config: testAccDocDBClusterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:docdb:[^:]+:\d{12}:cluster:.+`)),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:(rds|docdb):[^:]+:\d{12}:cluster:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.docdb3.6"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
@@ -65,8 +65,6 @@ func TestAccAWSDocDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttr(resourceName,
 						"enabled_cloudwatch_logs_exports.0", "audit"),
-					resource.TestCheckResourceAttr(resourceName,
-						"enabled_cloudwatch_logs_exports.1", "error"),
 				),
 			},
 		},
@@ -82,7 +80,7 @@ func TestAccAWSDocDBCluster_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocDBClusterConfig_namePrefix(acctest.RandInt()),
+				Config: testAccDocDBClusterConfig_namePrefix(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBClusterExists("aws_docdb_cluster.test", &v),
 					resource.TestMatchResourceAttr(
@@ -102,7 +100,7 @@ func TestAccAWSDocDBCluster_generatedName(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocDBClusterConfig_generatedName(acctest.RandInt()),
+				Config: testAccDocDBClusterConfig_generatedName(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBClusterExists("aws_docdb_cluster.test", &v),
 					resource.TestMatchResourceAttr(
@@ -187,23 +185,17 @@ func TestAccAWSDocDBCluster_updateCloudwatchLogsExports(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccDocDBClusterNoCloudwatchLogsConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBClusterExists("aws_docdb_cluster.default", &v),
+				),
+			},
+			{
 				Config: testAccDocDBClusterConfig(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBClusterExists("aws_docdb_cluster.default", &v),
 					resource.TestCheckResourceAttr("aws_docdb_cluster.default",
 						"enabled_cloudwatch_logs_exports.0", "audit"),
-					resource.TestCheckResourceAttr("aws_docdb_cluster.default",
-						"enabled_cloudwatch_logs_exports.1", "error"),
-				),
-			},
-			{
-				Config: testAccDocDBClusterConfigUpdatedCloudwatchLogsExports(ri),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBClusterExists("aws_docdb_cluster.default", &v),
-					resource.TestCheckResourceAttr("aws_docdb_cluster.default",
-						"enabled_cloudwatch_logs_exports.0", "error"),
-					resource.TestCheckResourceAttr("aws_docdb_cluster.default",
-						"enabled_cloudwatch_logs_exports.1", "slowquery"),
 				),
 			},
 		},
@@ -473,25 +465,25 @@ resource "aws_docdb_cluster" "default" {
 }`, n)
 }
 
-func testAccDocDBClusterConfig_namePrefix(n int) string {
-	return fmt.Sprintf(`
+func testAccDocDBClusterConfig_namePrefix() string {
+	return `
 resource "aws_docdb_cluster" "test" {
   cluster_identifier_prefix = "tf-test-"
-  master_username = "root-%d"
+  master_username = "root"
   master_password = "password"
   skip_final_snapshot = true
 }
-`, n)
+`
 }
 
-func testAccDocDBClusterConfig_generatedName(n int) string {
-	return fmt.Sprintf(`
+func testAccDocDBClusterConfig_generatedName() string {
+	return `
 resource "aws_docdb_cluster" "test" {
-  master_username = "root-%d"
+  master_username = "root"
   master_password = "password"
   skip_final_snapshot = true
 }
-`, n)
+`
 }
 
 func testAccDocDBClusterConfigWithFinalSnapshot(n int) string {
@@ -534,7 +526,7 @@ resource "aws_docdb_cluster" "default" {
 }`, n)
 }
 
-func testAccDocDBClusterConfigUpdatedCloudwatchLogsExports(n int) string {
+func testAccDocDBClusterNoCloudwatchLogsConfig(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
   cluster_identifier = "tf-docdb-cluster-%d"
@@ -543,10 +535,9 @@ resource "aws_docdb_cluster" "default" {
   master_password = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.docdb3.6"
   skip_final_snapshot = true
-  enabled_cloudwatch_logs_exports = [
-    "error",
-    "slowquery"
-  ]
+  tags = {
+    Environment = "production"
+  }
 }`, n)
 }
 
